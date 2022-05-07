@@ -13,6 +13,7 @@
 
 static int update(void *userdata);
 
+
 const char *fontpath = "/System/Fonts/Asheville-Sans-14-Bold.pft";
 LCDFont *font = NULL;
 
@@ -44,7 +45,10 @@ int eventHandler(PlaydateAPI *pd, PDSystemEvent event, uint32_t arg) {
 int x = (400 - TEXT_WIDTH) / 2;
 int y = (240 - TEXT_HEIGHT) / 2;
 int dx = 1;
-int dy = 2;
+int dy = 1;
+
+
+
 
 static int update(void *userdata) {
     PlaydateAPI *pd = userdata;
@@ -53,21 +57,43 @@ static int update(void *userdata) {
     pd->graphics->setFont(font);
 
 //    auto text = "PlayDate";
-    void* text= "PlayDate";
+    void* text= "PlayDatee";
+
     pd->graphics->drawText(text, strlen(text),kASCIIEncoding,x,y);
+//    pd->graphics->drawText((void *)dx,strlen((void *)dx),kASCIIEncoding,5,5);
+//    pd->graphics->drawText((void *)(char*)dy,strlen((void *)(char*)dy),kASCIIEncoding,5,10);
 //	pd->graphics->drawText("Hello World!", strlen("Hello World!"), kASCIIEncoding, x, y);
 
-    x += dx;
-    y += dy;
 
-    if (x < 0 || x > LCD_COLUMNS - TEXT_WIDTH)
-        dx = -dx;
+    PDButtons current;
+    pd->system->getButtonState(&current, NULL, NULL);
 
-    if (y < 0 || y > LCD_ROWS - TEXT_HEIGHT)
-        dy = -dy;
+    dx = dy = 0;
+//    pd->system->logToConsole((char*)current);
+    if ( current & kButtonUp ) {
+        dy = -1;
+    } else if ( current & kButtonDown ) {
+        dy = 1;
+    }
+    if ( current & kButtonLeft ) {
+        dx = -1;
+    } else if ( current & kButtonRight ) {
+        dx = 1;
+    }
 
+//    if (x < 0 || x > LCD_COLUMNS - TEXT_WIDTH)
+//        dx = -dx;
+//
+//    if (y < 0 || y > LCD_ROWS - TEXT_HEIGHT)
+//        dy = -dy;
+
+    x+=dx;
+    y+=dy;
     pd->system->drawFPS(0, 0);
+
 
     return 1;
 }
+
+
 
