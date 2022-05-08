@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include "pd_api.h"
+#include "include/config.h"
 
 static int update(void *userdata);
 
@@ -83,11 +84,33 @@ static int update(void *userdata) {
 
     void *text = "PlayDate";
 
-    pd->graphics->drawText(text, strlen(text), kASCIIEncoding, x, y);
+//    pd->graphics->drawText(text, strlen(text), kASCIIEncoding, x, y);
 //    pd->graphics->drawText((void *)dx,strlen((void *)dx),kASCIIEncoding,5,5);
 //    pd->graphics->drawText((void *)(char*)dy,strlen((void *)(char*)dy),kASCIIEncoding,5,10);
 //	pd->graphics->drawText("Hello World!", strlen("Hello World!"), kASCIIEncoding, x, y);
+//    pd->graphics->setDrawMode(kDrawModeFillBlack);
+    pd->graphics->fillRect(0,0,100,100,kColorBlack);
 
+    int displayHeight = pd->display->getHeight();
+    int displayWidth = pd->display->getWidth();
+
+    int heightMul = displayHeight/ CHIP8_HEIGHT;
+    int widthMul = displayWidth/ CHIP8_WIDTH;
+
+    for (int cx = 0; cx < CHIP8_WIDTH; cx++) {
+        for (int cy = 0; cy < CHIP8_HEIGHT; cy++) {
+            pd->graphics->fillRect(cx*widthMul,cy*heightMul,widthMul,heightMul,(cx+cy)%2==1?kColorBlack:kColorWhite);
+
+//            if (chip8_screen_is_set(&chip8.screen, x, y)) {
+//                SDL_Rect r;
+//                r.x = x * CHIP8_WINDOW_MULTIPLIER;
+//                r.y = y * CHIP8_WINDOW_MULTIPLIER;
+//                r.w = CHIP8_WINDOW_MULTIPLIER;
+//                r.h = CHIP8_WINDOW_MULTIPLIER;
+//                SDL_RenderFillRect(renderer, &r);
+//            }
+        }
+    }
 
     PDButtons current;
     pd->system->getButtonState(&current, NULL, NULL);
