@@ -1,4 +1,5 @@
 #include "../include/chip8screen.h"
+
 #include <assert.h>
 #include <memory.h>
 

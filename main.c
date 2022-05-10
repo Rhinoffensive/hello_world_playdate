@@ -1,16 +1,14 @@
-//
-//  main.c
-//  Extension
-//
-//  Created by Dave Hayden on 7/30/14.
-//  Copyright (c) 2014 Panic, Inc. All rights reserved.
-//
-
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "pd_api.h"
-#include "include/config.h"
+
+#include "src/chip8/include/config.h"
+#include "src/chip8/include/chip8.h"
+
+//#include "chip8/include/config.h"
+//#include "chip8/include/chip8.h"
+
 
 static int update(void *userdata);
 
@@ -22,6 +20,13 @@ LCDFont *font = NULL;
 __declspec(dllexport)
 #endif
 
+struct chip8 chip8;
+
+const char keyboard_map[CHIP8_TOTAL_KEYS] = {
+        kButtonUp, kButtonDown, kButtonLeft, kButtonRight, kButtonA, kButtonB,
+        kButtonUp, kButtonDown, kButtonLeft, kButtonRight, kButtonA, kButtonB,
+        kButtonUp, kButtonDown, kButtonLeft, kButtonRight};
+
 int eventHandler(PlaydateAPI *pd, PDSystemEvent event, uint32_t arg) {
     (void) arg; // arg is currently only used for event = kEventKeyPressed
 
@@ -32,7 +37,7 @@ int eventHandler(PlaydateAPI *pd, PDSystemEvent event, uint32_t arg) {
         if (font == NULL)
             pd->system->error("%s:%i Couldn't load font %s: %s", __FILE__, __LINE__, fontpath, err);
 
-        SDFile *file = pd->file->open("Airplane.ch8", kFileRead);
+        SDFile *file = pd->file->open("Puzzle.ch8", kFileRead);
         if (file == NULL) {
             pd->system->error("Couldn’t open file % s", "Airplane.ch8");
             pd->system->logToConsole(pd->file->geterr());
@@ -47,17 +52,21 @@ int eventHandler(PlaydateAPI *pd, PDSystemEvent event, uint32_t arg) {
 
             char buff[size];
 
-
-            int res = pd->file->read(file,buff,size);
+            int res = pd->file->read(file, buff, size);
             if (res != 1) {
                 printf("Failed to read from file");
 //                return -1;
             }
-
-
-
+//          struct chip8 chip8;
+            chip8_init(&chip8);
+            pd->system->logToConsole("init run!");
+            chip8_load(&chip8, buff, size);
+            chip8_keyboard_set_map(&chip8.keyboard, keyboard_map);
 
         }
+
+
+
         // Note: If you set an update callback in the kEventInit handler, the system assumes the game is pure C and doesn't run any Lua code in the game
         pd->system->setUpdateCallback(update, pd);
     }
@@ -82,35 +91,55 @@ static int update(void *userdata) {
     pd->graphics->setFont(font);
 
 
-    void *text = "PlayDate";
+//    void *text = "PlayDate";
 
 //    pd->graphics->drawText(text, strlen(text), kASCIIEncoding, x, y);
 //    pd->graphics->drawText((void *)dx,strlen((void *)dx),kASCIIEncoding,5,5);
 //    pd->graphics->drawText((void *)(char*)dy,strlen((void *)(char*)dy),kASCIIEncoding,5,10);
 //	pd->graphics->drawText("Hello World!", strlen("Hello World!"), kASCIIEncoding, x, y);
 //    pd->graphics->setDrawMode(kDrawModeFillBlack);
-    pd->graphics->fillRect(0,0,100,100,kColorBlack);
+//    pd->graphics->fillRect(0, 0, 100, 100, kColorBlack);
 
     int displayHeight = pd->display->getHeight();
     int displayWidth = pd->display->getWidth();
 
-    int heightMul = displayHeight/ CHIP8_HEIGHT;
-    int widthMul = displayWidth/ CHIP8_WIDTH;
+    int heightMul = displayHeight / CHIP8_HEIGHT;
+    int widthMul = displayWidth / CHIP8_WIDTH;
 
     for (int cx = 0; cx < CHIP8_WIDTH; cx++) {
         for (int cy = 0; cy < CHIP8_HEIGHT; cy++) {
-            pd->graphics->fillRect(cx*widthMul,cy*heightMul,widthMul,heightMul,(cx+cy)%2==1?kColorBlack:kColorWhite);
-
-//            if (chip8_screen_is_set(&chip8.screen, x, y)) {
-//                SDL_Rect r;
-//                r.x = x * CHIP8_WINDOW_MULTIPLIER;
-//                r.y = y * CHIP8_WINDOW_MULTIPLIER;
-//                r.w = CHIP8_WINDOW_MULTIPLIER;
-//                r.h = CHIP8_WINDOW_MULTIPLIER;
-//                SDL_RenderFillRect(renderer, &r);
-//            }
+            if (chip8_screen_is_set(&chip8.screen, cx, cy)) {
+                pd->graphics->fillRect(cx * widthMul, cy * heightMul, widthMul, heightMul,
+                                       kColorBlack);
+            } else {
+                pd->graphics->fillRect(cx * widthMul, cy * heightMul, widthMul, heightMul,
+                                       kColorWhite);
+            }
         }
     }
+
+    if (chip8.registers.delay_timer > 0) {
+//            sleep(10);
+//            SDL_Delay(300);
+//            nanosleep(1000);
+//            msleep(100);
+
+        chip8.registers.delay_timer -= 1;
+
+    }
+    else{
+//        msleep(3);
+    }
+
+    if (chip8.registers.sound_timer > 0) {
+        //fprintf(stdout, "\aBeep!\n" );
+//            Beep(15000, 10 * chip8.registers.sound_timer);
+        chip8.registers.sound_timer = 0;
+    }
+
+    unsigned short opcode = chip8_memory_get_short(&chip8.memory, chip8.registers.PC);
+    chip8.registers.PC += 2;
+    chip8_exec(&chip8, opcode);
 
     PDButtons current;
     pd->system->getButtonState(&current, NULL, NULL);

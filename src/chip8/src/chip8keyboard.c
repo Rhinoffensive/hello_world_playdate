@@ -1,4 +1,5 @@
 #include "../include/chip8keyboard.h"
+
 #include <assert.h>
 static void chip8_keyboard_ensure_in_bounds(int key)
 {

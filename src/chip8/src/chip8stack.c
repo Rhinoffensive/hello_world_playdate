@@ -1,5 +1,8 @@
+
 #include "../include/chip8stack.h"
 #include "../include/chip8.h"
+//#include "chip8stack.h"
+//#include "chip8.h"
 #include <assert.h>
 
 static void chip8_stack_in_bounds(struct chip8* chip8)

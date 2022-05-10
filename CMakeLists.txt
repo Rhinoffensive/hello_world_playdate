@@ -36,10 +36,15 @@ set(PLAYDATE_GAME_DEVICE hello_world_DEVICE)
 
 project(${PLAYDATE_GAME_NAME} C ASM)
 
+add_subdirectory(src/chip8)
+
 if (TOOLCHAIN STREQUAL "armgcc")
-	add_executable(${PLAYDATE_GAME_DEVICE} ${SDK}/C_API/buildsupport/setup.c src/main.c)
+	add_executable(${PLAYDATE_GAME_DEVICE} ${SDK}/C_API/buildsupport/setup.c main.c src/chip8/src/chip8.c src/chip8/src/chip8keyboard.c src/chip8/src/chip8stack.c src/chip8/src/chip8screen.c src/chip8/src/chip8memory.c)
+#	target_link_libraries(${PLAYDATE_GAME_DEVICE} PUBLIC chip8lib)
+	message("Link complete")
 else()
-	add_library(${PLAYDATE_GAME_NAME} SHARED src/main.c )
+	add_library(${PLAYDATE_GAME_NAME} SHARED main.c src/chip8/src/chip8.c src/chip8/include/chip8.h src/chip8/src/chip8keyboard.c src/chip8/include/chip8keyboard.h src/chip8/src/chip8stack.c src/chip8/include/chip8stack.h src/chip8/src/chip8screen.c src/chip8/include/chip8screen.h src/chip8/src/chip8memory.c src/chip8/include/chip8memory.h)
+	message("Else")
 endif()
 
 include(${SDK}/C_API/buildsupport/playdate_game.cmake)

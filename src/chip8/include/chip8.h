@@ -8,6 +8,7 @@
 #include "chip8keyboard.h"
 #include "chip8screen.h"
 #include <stddef.h>
+
 struct chip8
 {
     struct chip8_memory memory;
